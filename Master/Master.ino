@@ -1,8 +1,12 @@
 #include <Wire.h>
 #include <TimeLib.h>
-#include <ESP8266WiFi.h>
 #include <RTClib.h>
-RTC_DS1307 RTC;
+RTC_DS3231 RTC;//Define RTC type.
+#include <DHT.h>
+#include <DHT_U.h>
+#define DHTTYPE DHT11//Define DHT type.
+#define DHTPIN 8
+DHT dht(DHTPIN, DHTTYPE);
 
 //Define slave 7 digits i2c display adress..................................
 
@@ -10,40 +14,57 @@ RTC_DS1307 RTC;
 #define REG_MIN  0x05
 #define REG_HOUR 0x7b
 
+#define REG_TEMP 0xf5
+
 //Define alarm pin..........................................................
 #define RINGPIN 8
 
 int TIME_LEFT;
 #define BREAKTIME=10;
 
-//WiFi variables............................................................
-const char ssid[] = "abc";        //your network SSID (name)
-const char pass[] = "progsnob";       // your network password
-
 int SEG;
 int MIN;
 int HOUR;
 
-void CHCK_TIME(){
+int TEMP=0;
+
+void CHCK_TIME() {
 }
 
-void GET_TIME(){
-   DateTime now = RTC.now(); // Obtiene la fecha y hora del RTC
-   SEG = now.second();
-   HOUR = now.hour();
-   MIN = now.minute();
+void GET_TEMP(){
+  TEMP=dht.readTemperature();
+  
 }
+
+void GET_TIME() {
+  DateTime now = RTC.now(); // Obtiene la fecha y hora del RTC
+  SEG = now.second();
+  HOUR = now.hour();
+  MIN = now.minute();
+}
+
+void PRINT_TIME() {
+  Wire.beginTransmission(REG_SEG);
+  Wire.write(SEG);
+  Wire.endTransmission();
+  /*Wire.beginTransmission(REG_MIN);
+    Wire.write(MIN);
+    Wire.endTransmission();
+    Wire.beginTransmission(REG_HOUR);
+    Wire.write(HOUR);
+    Wire.endTransmission();*/
+}
+
 void setup() {
   Wire.begin();
-  RTC.begin();
+  dht.begin();
   pinMode(RINGPIN, OUTPUT);
-  TIME_LEFT=0;
+  TIME_LEFT = 0;
 }
 
 void loop() {
- GET_TIME();
- CHCK_TIME();
-  //printDigits(int(hour() * 100 + minute()));
-
-
+  GET_TIME();
+  GET_TEMP();
+  //CHCK_TIME();
+  PRINT_TIME();
 }

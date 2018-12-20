@@ -10,7 +10,7 @@
 #define d2 17
 
 int unit = 0;
-int dec = 0;
+int dec = 0;s
 
 void setup() {
   Wire.begin(0x0f);                // join i2c bus with address #8
