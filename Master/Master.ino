@@ -1,9 +1,10 @@
 #include <Wire.h>
 #include <TimeLib.h>
+#include <TimeAlarms.h>
+AlarmId id;
 #include <RTClib.h>
-RTC_DS3231 RTC;//Define RTC type.
+RTC_DS3231 RTC;//Define RTC type
 #include <DHT.h>
-#include <DHT_U.h>
 #define DHTTYPE DHT11//Define DHT type.
 #define DHTPIN 8
 DHT dht(DHTPIN, DHTTYPE);
@@ -16,24 +17,30 @@ DHT dht(DHTPIN, DHTTYPE);
 
 #define REG_TEMP 0xf5
 
-//Define alarm pin..........................................................
-#define RINGPIN 8
+//Define alarm adress......................................................
+#define REG_RING 0xcc
 
-int TIME_LEFT;
+boolean IS_BREAK = false;
 #define BREAKTIME=10;
+int SEG_LEFT;
+int MIN_LEFT;
+int MIN_BREAK_END
 
 int SEG;
 int MIN;
 int HOUR;
 
-int TEMP=0;
+int TEMP = 0;
 
 void CHCK_TIME() {
+  if(IS_BREAK==true){
+    SEG_LEFT=59-SEG;
+    MIN_LEFT=MIN_BREAK_END-MIN;
+  }
 }
 
-void GET_TEMP(){
-  TEMP=dht.readTemperature();
-  
+void GET_TEMP() {
+  TEMP = dht.readTemperature();
 }
 
 void GET_TIME() {
@@ -41,6 +48,13 @@ void GET_TIME() {
   SEG = now.second();
   HOUR = now.hour();
   MIN = now.minute();
+}
+
+void PRINT_TEMP() {
+  Wire.beginTransmission(REG_TEMP);
+  Wire.write(TEMP);
+  Wire.endTransmission();
+
 }
 
 void PRINT_TIME() {
@@ -55,16 +69,49 @@ void PRINT_TIME() {
     Wire.endTransmission();*/
 }
 
+void RING() {
+  Wire.beginTransmission(REG_RING);
+  Wire.write(1);
+  Wire.endTransmission();
+  IS_BREAK = false;
+}
+
+void BREAK() {
+  RING();
+  IS_BREAK = true;
+  MIN_BREAK_END=MIN+BREAKTIME;
+}
+
+void ALARMS() {
+  Alarm.alarmRepeat(7, 30, 0, RING);
+  Alarm.alarmRepeat(8, 20, 0, RING);
+  Alarm.alarmRepeat(9, 00, 0, BREAK);
+  Alarm.alarmRepeat(9, 10, 0, RING);
+  Alarm.alarmRepeat(9, 50, 0, RING);
+  Alarm.alarmRepeat(10, 30, 0, BREAK);
+  Alarm.alarmRepeat(10, 40, 0, RING);
+  Alarm.alarmRepeat(11, 20, 0, RING);
+  Alarm.alarmRepeat(12, 00, 0, BREAK);
+  Alarm.alarmRepeat(12, 10, 0, RING);
+  Alarm.alarmRepeat(12, 50, 0, RING);
+  Alarm.alarmRepeat(13, 30, 0, BREAK);
+  Alarm.alarmRepeat(13, 40, 0, RING);
+  Alarm.alarmRepeat(14, 20, 0, RING);
+  Alarm.alarmRepeat(15, 00, 0, RING);
+  Alarm.alarmRepeat(15, 40, 0, RING);
+}
+
 void setup() {
   Wire.begin();
   dht.begin();
-  pinMode(RINGPIN, OUTPUT);
   TIME_LEFT = 0;
+  ALARMS();
 }
 
 void loop() {
   GET_TIME();
   GET_TEMP();
-  //CHCK_TIME();
+  CHCK_TIME();
   PRINT_TIME();
+  PRINT_TEMP();
 }

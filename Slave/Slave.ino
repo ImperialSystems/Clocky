@@ -1,5 +1,10 @@
 #include <Wire.h>
 
+//#define DIR  0x0f//For Seconds Display
+//#define DIR  0x05//For Miniute Display
+//#define  DIR 0x7b//For Hour Display
+//#define DIR 0xf5 //For Temperature Display
+
 #define a 2
 #define b 3
 #define c 4
@@ -13,7 +18,7 @@ int unit = 0;
 int dec = 0;s
 
 void setup() {
-  Wire.begin(0x0f);                // join i2c bus with address #8
+  Wire.begin(DIR);                // join i2c bus with address #8
   Wire.onReceive(receiveEvent);
   pinMode(a, OUTPUT);
   pinMode(b, OUTPUT);
